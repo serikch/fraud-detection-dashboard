@@ -8,39 +8,43 @@
     <div class="row mb-4">
         <div class="col-12">
             <div class="alert alert-watson alert-custom">
-                <h4><i class="fas fa-brain"></i> Model Training with IBM Watson X AutoAI</h4>
-                <p class="mb-0">Train and evaluate fraud detection models using AutoAI or custom algorithms</p>
+                <h4><i class="fas fa-brain"></i> Model Training & Selection</h4>
+                <p class="mb-0">Use existing Watson X models or train new ones</p>
             </div>
         </div>
     </div>
 
     <div class="row">
-        <!-- Training Configuration -->
+        <!-- Model Selection -->
         <div class="col-lg-8 mb-4">
-            <!-- Training Method Selection -->
+            <!-- Model Source Selection -->
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0"><i class="fas fa-robot"></i> Select Training Method</h5>
+                    <h5 class="mb-0"><i class="fas fa-robot"></i> Select Model Source</h5>
                 </div>
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <div class="card h-100 border-primary" style="cursor: pointer;" onclick="selectTrainingMethod('autoai')">
+                            <div class="card h-100 border-primary" id="watsonCard" style="cursor: pointer;" onclick="selectModelSource('watson')">
                                 <div class="card-body text-center">
-                                    <i class="fas fa-magic fa-3x text-primary mb-3"></i>
-                                    <h5>Watson X AutoAI</h5>
-                                    <p class="text-muted small">Automatic model selection and hyperparameter tuning</p>
-                                    <span class="badge bg-success">Recommended</span>
+                                    <i class="fas fa-cloud fa-3x text-primary mb-3"></i>
+                                    <h5>Use Watson X Model</h5>
+                                    <p class="text-muted small">Pre-trained models from Watson X</p>
+                                    {% if watson_models %}
+                                    <span class="badge bg-success">{{ watson_models|length }} models available</span>
+                                    {% else %}
+                                    <span class="badge bg-warning">No models found</span>
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <div class="card h-100" style="cursor: pointer;" onclick="selectTrainingMethod('custom')">
+                            <div class="card h-100" id="newCard" style="cursor: pointer;" onclick="selectModelSource('new')">
                                 <div class="card-body text-center">
-                                    <i class="fas fa-code fa-3x text-secondary mb-3"></i>
-                                    <h5>Custom Training</h5>
-                                    <p class="text-muted small">Manual algorithm selection and configuration</p>
-                                    <span class="badge bg-secondary">Advanced</span>
+                                    <i class="fas fa-graduation-cap fa-3x text-secondary mb-3"></i>
+                                    <h5>Train New Model</h5>
+                                    <p class="text-muted small">Train from preprocessed data</p>
+                                    <span class="badge bg-info">Feature coming soon</span>
                                 </div>
                             </div>
                         </div>
@@ -48,271 +52,166 @@
                 </div>
             </div>
 
-            <!-- AutoAI Configuration -->
-            <div id="autoaiConfig" class="card border-0 shadow-sm mb-4">
+            <!-- Watson Model Selection -->
+            <div id="watsonModelSelection" class="card border-0 shadow-sm mb-4" style="display: none;">
                 <div class="card-header" style="background: linear-gradient(135deg, #0f62fe 0%, #0043ce 100%); color: white;">
-                    <h5 class="mb-0"><i class="fas fa-magic"></i> Watson X AutoAI Configuration</h5>
+                    <h5 class="mb-0"><i class="fas fa-cloud"></i> Available Watson X Models</h5>
                 </div>
                 <div class="card-body">
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Optimization Metric</label>
-                            <select class="form-select" id="optimizationMetric">
-                                <option value="roc_auc" selected>ROC-AUC (Recommended)</option>
-                                <option value="f1">F1 Score</option>
-                                <option value="precision">Precision</option>
-                                <option value="recall">Recall</option>
-                                <option value="accuracy">Accuracy</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Max Runtime (minutes)</label>
-                            <input type="number" class="form-control" id="maxRuntime" value="30" min="5" max="120">
-                        </div>
-                    </div>
-                    
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Number of Pipelines</label>
-                            <input type="range" class="form-range" id="numPipelines" min="2" max="8" value="4">
-                            <small class="text-muted">Selected: <span id="pipelineCount">4</span> pipelines</small>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Holdout Data Size</label>
-                            <input type="range" class="form-range" id="holdoutSize" min="10" max="30" value="20">
-                            <small class="text-muted">Holdout: <span id="holdoutPercent">20</span>%</small>
-                        </div>
-                    </div>
-                    
+                    {% if watson_models %}
                     <div class="mb-3">
-                        <label class="form-label">Algorithms to Include</label>
-                        <div class="row">
-                            <div class="col-md-4">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="lgbm" checked>
-                                    <label class="form-check-label" for="lgbm">LightGBM</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="xgb" checked>
-                                    <label class="form-check-label" for="xgb">XGBoost</label>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="rf" checked>
-                                    <label class="form-check-label" for="rf">Random Forest</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="lr" checked>
-                                    <label class="form-check-label" for="lr">Logistic Regression</label>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="nn">
-                                    <label class="form-check-label" for="nn">Neural Network</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="svm">
-                                    <label class="form-check-label" for="svm">SVM</label>
-                                </div>
-                            </div>
-                        </div>
+                        <label class="form-label">Select Watson X Model:</label>
+                        <select class="form-select form-select-lg" id="watsonModelSelect">
+                            <option value="">-- Select a model --</option>
+                            {% for model in watson_models %}
+                            <option value="{{ model.name }}">
+                                {{ model.name }} ({{ model.type }})
+                            </option>
+                            {% endfor %}
+                        </select>
                     </div>
                     
                     <div class="alert alert-info">
                         <i class="fas fa-info-circle"></i> 
-                        AutoAI will automatically handle class imbalance, feature selection, and hyperparameter tuning
+                        <strong>Model Performance:</strong><br>
+                        • ROC-AUC: 0.9367<br>
+                        • Precision: 73.7%<br>
+                        • Recall: 35.0%<br>
+                        • False Positives: 10 (optimized threshold)
                     </div>
-                </div>
-            </div>
-
-            <!-- Custom Training Configuration -->
-            <div id="customConfig" class="card border-0 shadow-sm mb-4" style="display: none;">
-                <div class="card-header bg-secondary text-white">
-                    <h5 class="mb-0"><i class="fas fa-code"></i> Custom Training Configuration</h5>
-                </div>
-                <div class="card-body">
-                    <div class="mb-3">
-                        <label class="form-label">Select Algorithm</label>
-                        <select class="form-select" id="customAlgorithm">
-                            <option value="logistic">Logistic Regression (Best Performance)</option>
-                            <option value="lightgbm">LightGBM</option>
-                            <option value="xgboost">XGBoost</option>
-                            <option value="random_forest">Random Forest</option>
-                        </select>
-                    </div>
-                    
+                    {% else %}
                     <div class="alert alert-warning">
                         <i class="fas fa-exclamation-triangle"></i> 
-                        Custom training feature coming soon. Use AutoAI for now.
+                        No Watson X models found. Please check your models/models-watsonx folder.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- New Model Training -->
+            <div id="newModelTraining" class="card border-0 shadow-sm mb-4" style="display: none;">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0"><i class="fas fa-graduation-cap"></i> Train New Model</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> 
+                        Advanced model training feature coming soon!<br>
+                        For now, you can use the pre-trained Watson X models.
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Algorithm</label>
+                            <select class="form-select" disabled>
+                                <option>Logistic Regression</option>
+                                <option>XGBoost</option>
+                                <option>LightGBM</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Validation Split</label>
+                            <input type="range" class="form-range" value="20" disabled>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Start Training Button -->
-            <button class="btn btn-primary-custom btn-custom btn-lg w-100 mb-4" onclick="startTraining()">
-                <i class="fas fa-rocket"></i> Start Training
+            <!-- Run Training Button -->
+            <button class="btn btn-primary-custom btn-custom btn-lg w-100 mb-4" id="runTrainingBtn" onclick="runTraining()">
+                <i class="fas fa-rocket"></i> Load/Train Model
             </button>
 
-            <!-- Training Progress -->
-            <div id="trainingProgress" class="card border-0 shadow-sm" style="display: none;">
-                <div class="card-header bg-warning">
-                    <h5 class="mb-0 text-dark"><i class="fas fa-spinner fa-spin"></i> Training in Progress</h5>
+            <!-- Training Results -->
+            <div id="trainingResults" class="card border-0 shadow-sm" style="display: none;">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-check-circle"></i> Model Ready!</h5>
                 </div>
                 <div class="card-body">
-                    <!-- Overall Progress -->
-                    <div class="mb-4">
-                        <h6>Overall Progress</h6>
-                        <div class="progress progress-custom">
-                            <div id="overallProgress" class="progress-bar progress-bar-custom progress-bar-striped progress-bar-animated" style="width: 0%">0%</div>
-                        </div>
+                    <div id="modelStats" class="mb-3">
+                        <!-- Stats will be inserted here -->
                     </div>
                     
-                    <!-- Pipeline Status -->
-                    <div class="mb-4">
-                        <h6>Pipeline Status</h6>
-                        <div id="pipelineStatus" class="row">
-                            <!-- Pipeline cards will be added dynamically -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <button class="btn btn-success-custom btn-custom w-100" onclick="proceedToPrediction()">
+                                <i class="fas fa-magic"></i> Make Predictions
+                            </button>
                         </div>
-                    </div>
-                    
-                    <!-- Training Log -->
-                    <div>
-                        <h6>Training Log</h6>
-                        <div id="trainingLog" class="bg-dark text-light p-3 rounded" style="height: 200px; overflow-y: auto; font-family: monospace; font-size: 0.85rem;">
-                            <!-- Logs will appear here -->
+                        <div class="col-md-6">
+                            <button class="btn btn-outline-primary btn-custom w-100" onclick="viewModelDetails()">
+                                <i class="fas fa-chart-bar"></i> View Details
+                            </button>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Training Sidebar -->
+        <!-- Model Information Sidebar -->
         <div class="col-lg-4 mb-4">
-            <!-- Dataset Info -->
+            <!-- Dataset Status -->
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-header bg-info text-white">
-                    <h5 class="mb-0"><i class="fas fa-database"></i> Dataset Info</h5>
+                    <h5 class="mb-0"><i class="fas fa-database"></i> Dataset Status</h5>
                 </div>
                 <div class="card-body">
-                    <div class="mb-3">
-                        <small class="text-muted">Training Samples</small>
-                        <h5 class="text-primary">168,000</h5>
+                    {% if processed_status.success %}
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle"></i> Dataset ready
                     </div>
-                    <div class="mb-3">
-                        <small class="text-muted">Validation Samples</small>
-                        <h5 class="text-primary">42,000</h5>
+                    <p><strong>File:</strong> {{ processed_status.processed_file }}</p>
+                    {% if processed_status.stats %}
+                    <p><strong>Features:</strong> {{ processed_status.stats.features }}</p>
+                    <p><strong>Rows:</strong> {{ processed_status.stats.rows }}</p>
+                    {% endif %}
+                    {% else %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i> No dataset loaded
                     </div>
-                    <div class="mb-3">
-                        <small class="text-muted">Features</small>
-                        <h5 class="text-primary">47</h5>
-                    </div>
-                    <div class="mb-3">
-                        <small class="text-muted">Class Balance</small>
-                        <div class="progress" style="height: 25px;">
-                            <div class="progress-bar bg-success" style="width: 99.85%">Legitimate</div>
-                            <div class="progress-bar bg-danger" style="width: 0.15%">Fraud</div>
-                        </div>
-                        <small class="text-muted">0.15% fraud rate</small>
-                    </div>
+                    <a href="/preprocessing" class="btn btn-outline-primary btn-sm w-100">
+                        Go to Preprocessing
+                    </a>
+                    {% endif %}
                 </div>
             </div>
 
-            <!-- Previous Training Results -->
+            <!-- Model Comparison -->
             <div class="card border-0 shadow-sm">
-                <div class="card-header bg-success text-white">
-                    <h5 class="mb-0"><i class="fas fa-trophy"></i> Best Models</h5>
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Model Comparison</h5>
                 </div>
                 <div class="card-body">
-                    <div class="model-result mb-3 p-3 bg-light rounded">
-                        <h6 class="mb-2">Logistic Regression</h6>
-                        <div class="d-flex justify-content-between mb-1">
-                            <small>ROC-AUC:</small>
-                            <strong class="text-success">0.9367</strong>
-                        </div>
-                        <div class="d-flex justify-content-between mb-1">
-                            <small>Precision:</small>
-                            <strong>0.737</strong>
-                        </div>
-                        <div class="d-flex justify-content-between">
-                            <small>Recall:</small>
-                            <strong>0.35</strong>
-                        </div>
-                    </div>
-                    
-                    <div class="model-result mb-3 p-3 bg-light rounded">
-                        <h6 class="mb-2">LightGBM</h6>
-                        <div class="d-flex justify-content-between mb-1">
-                            <small>ROC-AUC:</small>
-                            <strong class="text-warning">0.6811</strong>
-                        </div>
-                        <div class="d-flex justify-content-between mb-1">
-                            <small>Precision:</small>
-                            <strong>0.069</strong>
-                        </div>
-                        <div class="d-flex justify-content-between">
-                            <small>Recall:</small>
-                            <strong>0.50</strong>
-                        </div>
-                    </div>
-                    
-                    <button class="btn btn-outline-success btn-sm w-100" onclick="window.location.href='/models'">
-                        <i class="fas fa-database"></i> View All Models
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Training Results -->
-    <div id="trainingResults" class="row mt-4" style="display: none;">
-        <div class="col-12">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-success text-white">
-                    <h5 class="mb-0"><i class="fas fa-check-circle"></i> Training Complete!</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row mb-4">
-                        <div class="col-md-3">
-                            <div class="text-center">
-                                <h3 class="text-success">4</h3>
-                                <small class="text-muted">Pipelines Evaluated</small>
+                    <div class="model-comparison">
+                        <div class="mb-3">
+                            <h6>Logistic Regression (Your Best)</h6>
+                            <div class="progress mb-1">
+                                <div class="progress-bar bg-success" style="width: 93.67%">ROC-AUC: 0.9367</div>
                             </div>
                         </div>
-                        <div class="col-md-3">
-                            <div class="text-center">
-                                <h3 class="text-primary">0.9367</h3>
-                                <small class="text-muted">Best ROC-AUC</small>
+                        
+                        <div class="mb-3">
+                            <h6>LightGBM</h6>
+                            <div class="progress mb-1">
+                                <div class="progress-bar bg-warning" style="width: 68.11%">ROC-AUC: 0.6811</div>
                             </div>
                         </div>
-                        <div class="col-md-3">
-                            <div class="text-center">
-                                <h3 class="text-warning">28.5 min</h3>
-                                <small class="text-muted">Training Time</small>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="text-center">
-                                <h3 class="text-info">93</h3>
-                                <small class="text-muted">Frauds Detected</small>
+                        
+                        <div class="mb-3">
+                            <h6>Watson AutoAI</h6>
+                            <div class="progress mb-1">
+                                <div class="progress-bar bg-info" style="width: 92%">ROC-AUC: 0.92</div>
                             </div>
                         </div>
                     </div>
                     
-                    <!-- Model Comparison Chart -->
-                    <canvas id="modelComparisonChart" height="80"></canvas>
+                    <hr>
                     
-                    <div class="mt-4 d-grid gap-2 d-md-flex justify-content-md-center">
-                        <button class="btn btn-success-custom btn-custom" onclick="deployBestModel()">
-                            <i class="fas fa-cloud-upload-alt"></i> Deploy Best Model
-                        </button>
-                        <button class="btn btn-primary-custom btn-custom" onclick="window.location.href='/prediction'">
-                            <i class="fas fa-magic"></i> Make Predictions
-                        </button>
-                        <button class="btn btn-outline-primary btn-custom" onclick="downloadModelReport()">
-                            <i class="fas fa-download"></i> Download Report
-                        </button>
+                    <div class="text-center">
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle"></i> 
+                            Optimized for cold-start problem
+                        </small>
                     </div>
                 </div>
             </div>
@@ -321,173 +220,127 @@
 </div>
 
 <script>
-// Update sliders
-document.getElementById('numPipelines').addEventListener('input', function() {
-    document.getElementById('pipelineCount').textContent = this.value;
-});
+let selectedModelSource = null;
+let selectedModel = null;
 
-document.getElementById('holdoutSize').addEventListener('input', function() {
-    document.getElementById('holdoutPercent').textContent = this.value;
-});
-
-function selectTrainingMethod(method) {
-    if (method === 'autoai') {
-        document.getElementById('autoaiConfig').style.display = 'block';
-        document.getElementById('customConfig').style.display = 'none';
+function selectModelSource(source) {
+    selectedModelSource = source;
+    
+    // Update UI
+    if (source === 'watson') {
+        document.getElementById('watsonCard').classList.add('border-primary', 'border-3');
+        document.getElementById('newCard').classList.remove('border-primary', 'border-3');
+        document.getElementById('watsonModelSelection').style.display = 'block';
+        document.getElementById('newModelTraining').style.display = 'none';
     } else {
-        document.getElementById('autoaiConfig').style.display = 'none';
-        document.getElementById('customConfig').style.display = 'block';
+        document.getElementById('newCard').classList.add('border-primary', 'border-3');
+        document.getElementById('watsonCard').classList.remove('border-primary', 'border-3');
+        document.getElementById('newModelTraining').style.display = 'block';
+        document.getElementById('watsonModelSelection').style.display = 'none';
     }
 }
 
-function startTraining() {
-    // Show progress section
-    document.getElementById('trainingProgress').style.display = 'block';
-    document.getElementById('trainingResults').style.display = 'none';
-    
-    const numPipelines = document.getElementById('numPipelines').value;
-    const pipelineStatus = document.getElementById('pipelineStatus');
-    const trainingLog = document.getElementById('trainingLog');
-    
-    // Clear previous content
-    pipelineStatus.innerHTML = '';
-    trainingLog.innerHTML = '';
-    
-    // Create pipeline cards
-    for (let i = 1; i <= numPipelines; i++) {
-        const pipelineCard = document.createElement('div');
-        pipelineCard.className = 'col-md-6 mb-3';
-        pipelineCard.innerHTML = `
-            <div class="card">
-                <div class="card-body">
-                    <h6>Pipeline ${i}</h6>
-                    <div class="progress" style="height: 10px;">
-                        <div id="pipeline${i}Progress" class="progress-bar bg-info progress-bar-striped progress-bar-animated" style="width: 0%"></div>
-                    </div>
-                    <small class="text-muted">Initializing...</small>
-                </div>
-            </div>
-        `;
-        pipelineStatus.appendChild(pipelineCard);
+function runTraining() {
+    if (!selectedModelSource) {
+        showNotification('Please select a model source first', 'warning');
+        return;
     }
     
-    // Add initial log
-    addTrainingLog('Starting AutoAI training...');
-    addTrainingLog(`Initializing ${numPipelines} pipelines...`);
+    if (selectedModelSource === 'watson') {
+        selectedModel = document.getElementById('watsonModelSelect').value;
+        if (!selectedModel) {
+            showNotification('Please select a Watson X model', 'warning');
+            return;
+        }
+    }
     
-    // Simulate training progress
-    let overallProgress = 0;
-    const interval = setInterval(() => {
-        overallProgress += Math.random() * 5;
-        
-        if (overallProgress > 100) {
-            overallProgress = 100;
-            clearInterval(interval);
-            
-            // Show results
-            setTimeout(() => {
-                showTrainingResults();
-            }, 1000);
-        }
-        
-        // Update overall progress
-        document.getElementById('overallProgress').style.width = overallProgress + '%';
-        document.getElementById('overallProgress').textContent = Math.round(overallProgress) + '%';
-        
-        // Update pipeline progress
-        for (let i = 1; i <= numPipelines; i++) {
-            const pipelineProgress = Math.min(100, overallProgress + Math.random() * 10);
-            document.getElementById(`pipeline${i}Progress`).style.width = pipelineProgress + '%';
-        }
-        
-        // Add random log entries
-        if (Math.random() > 0.7) {
-            const messages = [
-                'Feature engineering completed',
-                'Hyperparameter optimization in progress',
-                'Cross-validation fold completed',
-                'Model evaluation running',
-                'Computing metrics'
-            ];
-            addTrainingLog(messages[Math.floor(Math.random() * messages.length)]);
-        }
-    }, 500);
+    // Show loading
+    showNotification('Loading model...', 'info');
     
-    // Send request to backend
+    // Send request
     $.ajax({
         url: '/train_model',
         method: 'POST',
         contentType: 'application/json',
         data: JSON.stringify({
-            model_type: 'autoai',
-            metric: document.getElementById('optimizationMetric').value,
-            pipelines: numPipelines
+            model_source: selectedModelSource,
+            selected_model: selectedModel
         }),
         success: function(response) {
-            console.log('Training response:', response);
-        }
-    });
-}
-
-function addTrainingLog(message) {
-    const log = document.getElementById('trainingLog');
-    const entry = document.createElement('div');
-    entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
-    log.appendChild(entry);
-    log.scrollTop = log.scrollHeight;
-}
-
-function showTrainingResults() {
-    document.getElementById('trainingResults').style.display = 'block';
-    
-    // Create comparison chart
-    const ctx = document.getElementById('modelComparisonChart').getContext('2d');
-    new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: ['Pipeline 1', 'Pipeline 2', 'Pipeline 3', 'Pipeline 4'],
-            datasets: [
-                {
-                    label: 'ROC-AUC',
-                    data: [0.9367, 0.8924, 0.8756, 0.8234],
-                    backgroundColor: 'rgba(15, 98, 254, 0.6)'
-                },
-                {
-                    label: 'Precision',
-                    data: [0.737, 0.652, 0.589, 0.512],
-                    backgroundColor: 'rgba(40, 167, 69, 0.6)'
-                },
-                {
-                    label: 'Recall',
-                    data: [0.35, 0.42, 0.48, 0.55],
-                    backgroundColor: 'rgba(255, 193, 7, 0.6)'
+            if (response.success) {
+                // Show results
+                document.getElementById('trainingResults').style.display = 'block';
+                
+                let statsHtml = '<div class="row">';
+                statsHtml += '<div class="col-md-6">';
+                statsHtml += '<h6>Model: ' + response.model_name + '</h6>';
+                statsHtml += '</div>';
+                statsHtml += '<div class="col-md-6">';
+                statsHtml += '<h6>Accuracy: ' + (response.accuracy * 100).toFixed(2) + '%</h6>';
+                statsHtml += '</div>';
+                statsHtml += '</div>';
+                
+                if (response.stats) {
+                    statsHtml += '<hr>';
+                    statsHtml += '<div class="row">';
+                    
+                    if (response.stats.roc_auc) {
+                        statsHtml += '<div class="col-md-3 text-center">';
+                        statsHtml += '<h5 class="text-primary">' + response.stats.roc_auc + '</h5>';
+                        statsHtml += '<small>ROC-AUC</small>';
+                        statsHtml += '</div>';
+                    }
+                    
+                    if (response.stats.precision) {
+                        statsHtml += '<div class="col-md-3 text-center">';
+                        statsHtml += '<h5 class="text-success">' + response.stats.precision + '</h5>';
+                        statsHtml += '<small>Precision</small>';
+                        statsHtml += '</div>';
+                    }
+                    
+                    if (response.stats.recall) {
+                        statsHtml += '<div class="col-md-3 text-center">';
+                        statsHtml += '<h5 class="text-warning">' + response.stats.recall + '</h5>';
+                        statsHtml += '<small>Recall</small>';
+                        statsHtml += '</div>';
+                    }
+                    
+                    if (response.stats.false_positives !== undefined) {
+                        statsHtml += '<div class="col-md-3 text-center">';
+                        statsHtml += '<h5 class="text-danger">' + response.stats.false_positives + '</h5>';
+                        statsHtml += '<small>False Positives</small>';
+                        statsHtml += '</div>';
+                    }
+                    
+                    statsHtml += '</div>';
                 }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    max: 1
-                }
+                
+                document.getElementById('modelStats').innerHTML = statsHtml;
+                
+                showNotification('Model loaded successfully!', 'success');
+            } else {
+                showNotification(response.message || 'Error loading model', 'error');
             }
+        },
+        error: function(xhr) {
+            showNotification('Error connecting to server', 'error');
         }
     });
-    
-    showNotification('Training completed successfully!', 'success');
 }
 
-function deployBestModel() {
-    showNotification('Deploying model to Watson X...', 'info');
-    setTimeout(() => {
-        showNotification('Model deployed successfully!', 'success');
-    }, 2000);
+function proceedToPrediction() {
+    window.location.href = '/prediction';
 }
 
-function downloadModelReport() {
-    showNotification('Generating model report...', 'info');
+function viewModelDetails() {
+    showNotification('Detailed model analysis coming soon!', 'info');
 }
+
+// Auto-select Watson if models are available
+document.addEventListener('DOMContentLoaded', function() {
+    "{% if watson_models %}"
+    selectModelSource('watson');
+    "{% endif %}"
+});
 </script>
 {% endblock %}

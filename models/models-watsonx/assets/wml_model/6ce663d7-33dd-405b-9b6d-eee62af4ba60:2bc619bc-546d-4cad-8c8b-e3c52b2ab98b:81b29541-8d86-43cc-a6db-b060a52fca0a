@@ -1,0 +1,66 @@
+{
+  "doc_type": "pipeline",
+  "pipelines": [{
+    "id": "5c9f5299-f95e-4b74-bf8b-7ec1d7a9d39b",
+    "nodes": [{
+      "id": "automl",
+      "op": "wml-http-score",
+      "outputs": [{
+        "id": "automl"
+      }],
+      "parameters": {
+        "incremental_learning": true,
+        "input_file_separator": ",",
+        "stage_flag": true,
+        "optimization": {
+          "daub_include_only_estimators": ["DecisionTreeClassifierEstimator", "LogisticRegressionEstimator", "XGBClassifierEstimator", "SnapDecisionTreeClassifierEstimator", "SnapLogisticRegressionEstimator", "SnapSVMClassifierEstimator", "SnapRandomForestClassifierEstimator", "GradientBoostingClassifierEstimator"],
+          "learning_type": "classification",
+          "label": "fraud_label",
+          "global_stage_include_batched_ensemble_estimators": ["BatchedTreeEnsembleClassifier(XGBClassifier)", "BatchedTreeEnsembleClassifier(SnapRandomForestClassifier)"],
+          "max_num_daub_ensembles": 2,
+          "feature_selector_mode": "auto",
+          "compute_pipeline_notebooks_flag": true,
+          "run_cognito_flag": true,
+          "daub_adaptive_subsampling_max_mem_usage": 15000000000,
+          "holdout_param": 0.1,
+          "cv_num_folds": 3,
+          "positive_label": 1,
+          "scorer_for_ranking": "f1"
+        },
+        "wml_status": {
+          "url": "https://eu-de.ml.cloud.ibm.com/v4_private/trainings"
+        },
+        "storage": {
+          "exchange": "training-prod",
+          "url": "amqps://ibm_cloud_1eafb3e2_955a_481e_9de4_2fa0314b02bb:F6bxxPBmh45mXZ1e4JoTYq6g4zXeoDST@4c2f46be-5d15-4a00-945f-04a938a7f6b2.c13p25pf03djhc8of4jg.databases.appdomain.cloud:32429"
+        },
+        "enable_early_stop": true,
+        "n_parallel_data_connections": 4,
+        "one_vs_all_file": true,
+        "output_logs": true,
+        "early_stop_window_size": 3
+      },
+      "runtime_ref": "autoai",
+      "type": "execution_node"
+    }],
+    "runtime_ref": "hybrid"
+  }],
+  "primary_pipeline": "5c9f5299-f95e-4b74-bf8b-7ec1d7a9d39b",
+  "runtimes": [{
+    "app_data": {
+      "wml_data": {
+        "hardware_spec": {
+          "id": "a6c4923b-b8e4-444c-9f43-8a7ec3020110",
+          "name": "L"
+        },
+        "software_spec": {
+          "name": "autoai-kb_rt24.1-py3.11"
+        }
+      }
+    },
+    "id": "autoai",
+    "name": "auto_ai.kb",
+    "version": "3.1.446"
+  }],
+  "version": "2.0"
+}
