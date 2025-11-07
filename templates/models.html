@@ -1,0 +1,494 @@
+{% extends "base.html" %}
+
+{% block title %}Model Management - Fraud Detection System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Models Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-info alert-custom">
+                <h4><i class="fas fa-database"></i> Model Management Center</h4>
+                <p class="mb-0">Upload, manage, compare and deploy your fraud detection models</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Model Upload Section -->
+        <div class="col-lg-8 mb-4">
+            <!-- Upload Model Card -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-cloud-upload-alt"></i> Upload Model</h5>
+                </div>
+                <div class="card-body">
+                    <div class="upload-area" id="modelUploadArea">
+                        <i class="fas fa-robot fa-4x text-primary mb-3"></i>
+                        <h4>Drag & Drop Model File</h4>
+                        <p class="text-muted">Upload .pkl, .joblib, or Watson X model files</p>
+                        <button type="button" class="btn btn-primary-custom btn-custom" onclick="document.getElementById('modelFile').click()">
+                            <i class="fas fa-folder-open"></i> Browse Models
+                        </button>
+                        <input type="file" id="modelFile" accept=".pkl,.joblib,.h5,.json" style="display: none;">
+                        <div class="mt-3">
+                            <small class="text-muted">Max size: 500MB | Supported: Scikit-learn, XGBoost, LightGBM, TensorFlow</small>
+                        </div>
+                    </div>
+
+                    <!-- Upload Form (Hidden initially) -->
+                    <div id="modelUploadForm" style="display: none;" class="mt-4">
+                        <h6>Model Information</h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Model Name</label>
+                                <input type="text" class="form-control" id="modelName" placeholder="e.g., fraud_detector_v2">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Model Type</label>
+                                <select class="form-select" id="modelType">
+                                    <option value="logistic">Logistic Regression</option>
+                                    <option value="xgboost">XGBoost</option>
+                                    <option value="lightgbm">LightGBM</option>
+                                    <option value="random_forest">Random Forest</option>
+                                    <option value="neural_network">Neural Network</option>
+                                    <option value="autoai">Watson AutoAI</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">ROC-AUC Score</label>
+                                <input type="number" class="form-control" id="rocAuc" step="0.001" min="0" max="1" placeholder="0.936">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Precision</label>
+                                <input type="number" class="form-control" id="precision" step="0.001" min="0" max="1" placeholder="0.737">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Recall</label>
+                                <input type="number" class="form-control" id="recall" step="0.001" min="0" max="1" placeholder="0.350">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" id="modelDescription" rows="2" placeholder="Brief description of the model..."></textarea>
+                        </div>
+                        
+                        <button class="btn btn-success-custom btn-custom w-100" onclick="uploadModel()">
+                            <i class="fas fa-upload"></i> Upload Model
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Saved Models -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0"><i class="fas fa-list"></i> Saved Models</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table custom-table">
+                            <thead>
+                                <tr>
+                                    <th>Model Name</th>
+                                    <th>Type</th>
+                                    <th>ROC-AUC</th>
+                                    <th>Uploaded</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <i class="fas fa-star text-warning"></i>
+                                        <strong>fraud_logistic_optimized</strong>
+                                    </td>
+                                    <td><span class="badge bg-primary">Logistic Regression</span></td>
+                                    <td><strong class="text-success">0.9367</strong></td>
+                                    <td>2025-01-07</td>
+                                    <td><span class="badge bg-success">Deployed</span></td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-outline-primary" onclick="viewModel('fraud_logistic_optimized')">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="btn btn-outline-success" onclick="testModel('fraud_logistic_optimized')">
+                                                <i class="fas fa-play"></i>
+                                            </button>
+                                            <button class="btn btn-outline-danger" onclick="deleteModel('fraud_logistic_optimized')">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>lightgbm_baseline</strong></td>
+                                    <td><span class="badge bg-warning">LightGBM</span></td>
+                                    <td><strong class="text-warning">0.6811</strong></td>
+                                    <td>2025-01-07</td>
+                                    <td><span class="badge bg-secondary">Inactive</span></td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-outline-primary" onclick="viewModel('lightgbm_baseline')">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="btn btn-outline-success" onclick="testModel('lightgbm_baseline')">
+                                                <i class="fas fa-play"></i>
+                                            </button>
+                                            <button class="btn btn-outline-danger" onclick="deleteModel('lightgbm_baseline')">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>watson_autoai_pipeline1</strong></td>
+                                    <td><span class="badge bg-info">Watson AutoAI</span></td>
+                                    <td><strong class="text-info">0.9201</strong></td>
+                                    <td>2025-01-06</td>
+                                    <td><span class="badge bg-warning">Testing</span></td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-outline-primary" onclick="viewModel('watson_autoai_pipeline1')">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="btn btn-outline-success" onclick="testModel('watson_autoai_pipeline1')">
+                                                <i class="fas fa-play"></i>
+                                            </button>
+                                            <button class="btn btn-outline-danger" onclick="deleteModel('watson_autoai_pipeline1')">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% for model in trained_models %}
+                                <tr>
+                                    <td><strong>{{ model.name }}</strong></td>
+                                    <td><span class="badge bg-secondary">{{ model.type }}</span></td>
+                                    <td>
+                                        {% if model.accuracy != 'Unknown' %}
+                                            <strong class="text-primary">{{ "%.4f"|format(model.accuracy) }}</strong>
+                                        {% else %}
+                                            <span class="text-muted">N/A</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ model.training_time }}</td>
+                                    <td><span class="badge bg-secondary">New</span></td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-outline-primary" onclick="viewModel('{{ model.name }}')">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="btn btn-outline-success" onclick="testModel('{{ model.name }}')">
+                                                <i class="fas fa-play"></i>
+                                            </button>
+                                            <button class="btn btn-outline-danger" onclick="deleteModel('{{ model.name }}')">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Model Comparison & Stats -->
+        <div class="col-lg-4 mb-4">
+            <!-- Model Comparison -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Model Comparison</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="modelComparisonChart" height="250"></canvas>
+                    <div class="mt-3 text-center">
+                        <button class="btn btn-outline-success btn-sm" onclick="compareModels()">
+                            <i class="fas fa-sync"></i> Update Comparison
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Best Model -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-warning">
+                    <h5 class="mb-0 text-dark"><i class="fas fa-trophy"></i> Best Model</h5>
+                </div>
+                <div class="card-body">
+                    <h5 class="text-primary">fraud_logistic_optimized</h5>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>ROC-AUC:</span>
+                            <strong class="text-success">0.9367</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Precision:</span>
+                            <strong>0.737</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Recall:</span>
+                            <strong>0.350</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>F1-Score:</span>
+                            <strong>0.475</strong>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-success mb-3">
+                        <small><i class="fas fa-check-circle"></i> Currently deployed in production</small>
+                    </div>
+                    
+                    <button class="btn btn-primary-custom btn-custom btn-sm w-100" onclick="window.location.href='/prediction'">
+                        <i class="fas fa-magic"></i> Use for Predictions
+                    </button>
+                </div>
+            </div>
+
+            <!-- Watson X Models -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header" style="background: linear-gradient(135deg, #0f62fe 0%, #0043ce 100%); color: white;">
+                    <h5 class="mb-0"><i class="fas fa-cloud"></i> Watson X Models</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info mb-3">
+                        <small><i class="fas fa-info-circle"></i> AutoAI models available in Watson X</small>
+                    </div>
+                    
+                    <div class="list-group">
+                        <a href="#" class="list-group-item list-group-item-action">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">Pipeline 1</h6>
+                                    <small>XGBoost + HPO</small>
+                                </div>
+                                <span class="badge bg-primary">0.920</span>
+                            </div>
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">Pipeline 2</h6>
+                                    <small>LightGBM + FS</small>
+                                </div>
+                                <span class="badge bg-primary">0.892</span>
+                            </div>
+                        </a>
+                    </div>
+                    
+                    <button class="btn btn-outline-primary btn-sm w-100 mt-3" onclick="importWatsonModel()">
+                        <i class="fas fa-download"></i> Import from Watson X
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Model Details Modal -->
+    <div class="modal fade" id="modelDetailsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-robot"></i> Model Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="modelDetailsContent">
+                        <!-- Model details will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// File handling for model upload
+const modelUploadArea = document.getElementById('modelUploadArea');
+const modelFile = document.getElementById('modelFile');
+let selectedModelFile = null;
+
+// Drag and drop for models
+['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+    modelUploadArea.addEventListener(eventName, preventDefaults, false);
+});
+
+function preventDefaults(e) {
+    e.preventDefault();
+    e.stopPropagation();
+}
+
+['dragenter', 'dragover'].forEach(eventName => {
+    modelUploadArea.addEventListener(eventName, () => modelUploadArea.classList.add('dragover'), false);
+});
+
+['dragleave', 'drop'].forEach(eventName => {
+    modelUploadArea.addEventListener(eventName, () => modelUploadArea.classList.remove('dragover'), false);
+});
+
+modelUploadArea.addEventListener('drop', handleModelDrop, false);
+
+function handleModelDrop(e) {
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+        handleModelFile(files[0]);
+    }
+}
+
+modelFile.addEventListener('change', function(e) {
+    if (this.files.length > 0) {
+        handleModelFile(this.files[0]);
+    }
+});
+
+function handleModelFile(file) {
+    selectedModelFile = file;
+    
+    // Show upload form
+    document.getElementById('modelUploadForm').style.display = 'block';
+    
+    // Set suggested model name
+    const modelName = file.name.replace(/\.[^/.]+$/, "");
+    document.getElementById('modelName').value = modelName;
+    
+    showNotification(`Model file selected: ${file.name}`, 'info');
+}
+
+function uploadModel() {
+    if (!selectedModelFile) {
+        showNotification('Please select a model file', 'error');
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('model_file', selectedModelFile);
+    formData.append('name', document.getElementById('modelName').value);
+    formData.append('type', document.getElementById('modelType').value);
+    formData.append('roc_auc', document.getElementById('rocAuc').value);
+    formData.append('precision', document.getElementById('precision').value);
+    formData.append('recall', document.getElementById('recall').value);
+    formData.append('description', document.getElementById('modelDescription').value);
+    
+    // Show loading
+    showNotification('Uploading model...', 'info');
+    
+    $.ajax({
+        url: '/upload_model',
+        method: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function(response) {
+            showNotification('Model uploaded successfully!', 'success');
+            
+            // Reset form
+            document.getElementById('modelUploadForm').style.display = 'none';
+            selectedModelFile = null;
+            
+            // Reload page to show new model
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
+        },
+        error: function(xhr) {
+            showNotification('Upload failed: ' + xhr.responseJSON.error, 'error');
+        }
+    });
+}
+
+// Model comparison chart
+const ctx = document.getElementById('modelComparisonChart').getContext('2d');
+const comparisonChart = new Chart(ctx, {
+    type: 'radar',
+    data: {
+        labels: ['ROC-AUC', 'Precision', 'Recall', 'F1-Score', 'Speed'],
+        datasets: [
+            {
+                label: 'Logistic Regression',
+                data: [0.9367, 0.737, 0.350, 0.475, 0.95],
+                borderColor: 'rgba(30, 61, 89, 1)',
+                backgroundColor: 'rgba(30, 61, 89, 0.2)',
+            },
+            {
+                label: 'LightGBM',
+                data: [0.6811, 0.069, 0.500, 0.121, 0.85],
+                borderColor: 'rgba(245, 181, 83, 1)',
+                backgroundColor: 'rgba(245, 181, 83, 0.2)',
+            },
+            {
+                label: 'Watson AutoAI',
+                data: [0.920, 0.652, 0.420, 0.511, 0.70],
+                borderColor: 'rgba(15, 98, 254, 1)',
+                backgroundColor: 'rgba(15, 98, 254, 0.2)',
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            r: {
+                beginAtZero: true,
+                max: 1
+            }
+        }
+    }
+});
+
+function viewModel(modelName) {
+    const modal = new bootstrap.Modal(document.getElementById('modelDetailsModal'));
+    
+    document.getElementById('modelDetailsContent').innerHTML = `
+        <h5>${modelName}</h5>
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i> Model details viewer coming soon...
+        </div>
+        <p>This will show:</p>
+        <ul>
+            <li>Model parameters</li>
+            <li>Feature importance</li>
+            <li>Confusion matrix</li>
+            <li>ROC curve</li>
+            <li>Training history</li>
+        </ul>
+    `;
+    
+    modal.show();
+}
+
+function testModel(modelName) {
+    showNotification(`Testing model: ${modelName}`, 'info');
+    window.location.href = `/prediction?model=${modelName}`;
+}
+
+function deleteModel(modelName) {
+    if (confirm(`Are you sure you want to delete ${modelName}?`)) {
+        showNotification(`Model deleted: ${modelName}`, 'warning');
+        setTimeout(() => {
+            location.reload();
+        }, 1000);
+    }
+}
+
+function compareModels() {
+    showNotification('Updating model comparison...', 'info');
+    // In production, this would fetch latest model metrics
+}
+
+function importWatsonModel() {
+    showNotification('Connecting to Watson X...', 'info');
+    setTimeout(() => {
+        showNotification('Watson X models imported', 'success');
+    }, 2000);
+}
+</script>
+{% endblock %}

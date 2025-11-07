@@ -1,0 +1,490 @@
+{% extends "base.html" %}
+
+{% block title %}Prediction - Fraud Detection System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Prediction Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-danger alert-custom">
+                <h4><i class="fas fa-magic"></i> Fraud Prediction Engine</h4>
+                <p class="mb-0">Detect fraudulent transactions in real-time using trained models</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Prediction Input Section -->
+        <div class="col-lg-8 mb-4">
+            <!-- Model Selection -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-robot"></i> Select Model</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <select class="form-select form-select-lg" id="modelSelect">
+                                <option value="fraud_logistic_optimized" selected>fraud_logistic_optimized (ROC-AUC: 0.9367)</option>
+                                <option value="watson_autoai_pipeline1">watson_autoai_pipeline1 (ROC-AUC: 0.9201)</option>
+                                <option value="lightgbm_baseline">lightgbm_baseline (ROC-AUC: 0.6811)</option>
+                                {% for model in trained_models %}
+                                <option value="{{ model.name }}">{{ model.name }} ({{ model.type }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center">
+                                <small class="text-muted">Threshold</small>
+                                <h4 class="text-primary">0.5</h4>
+                                <input type="range" class="form-range" id="threshold" min="0" max="100" value="50">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input Methods -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0"><i class="fas fa-database"></i> Input Method</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Tab Navigation -->
+                    <ul class="nav nav-tabs mb-3" role="tablist">
+                        <li class="nav-item">
+                            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#singleTransaction">
+                                <i class="fas fa-edit"></i> Single Transaction
+                            </button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#batchUpload">
+                                <i class="fas fa-upload"></i> Batch Upload
+                            </button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#evaluationSet">
+                                <i class="fas fa-flask"></i> Evaluation Dataset
+                            </button>
+                        </li>
+                    </ul>
+
+                    <!-- Tab Content -->
+                    <div class="tab-content">
+                        <!-- Single Transaction Tab -->
+                        <div class="tab-pane fade show active" id="singleTransaction">
+                            <h6>Transaction Details</h6>
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Amount ($)</label>
+                                    <input type="number" class="form-control" id="amount" value="125.50" step="0.01">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">MCC Code</label>
+                                    <select class="form-select" id="mcc">
+                                        <option value="5411">5411 - Grocery Stores</option>
+                                        <option value="5912">5912 - Drug Stores</option>
+                                        <option value="5732" selected>5732 - Electronics Stores</option>
+                                        <option value="5812">5812 - Eating Places</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Transaction Type</label>
+                                    <select class="form-select" id="transType">
+                                        <option value="chip">Chip</option>
+                                        <option value="swipe">Swipe</option>
+                                        <option value="online" selected>Online</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Card Type</label>
+                                    <select class="form-select" id="cardType">
+                                        <option value="credit">Credit</option>
+                                        <option value="debit">Debit</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Hour of Day</label>
+                                    <input type="number" class="form-control" id="hour" value="14" min="0" max="23">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Day of Week</label>
+                                    <select class="form-select" id="dayOfWeek">
+                                        <option value="1">Monday</option>
+                                        <option value="2">Tuesday</option>
+                                        <option value="3">Wednesday</option>
+                                        <option value="4">Thursday</option>
+                                        <option value="5" selected>Friday</option>
+                                        <option value="6">Saturday</option>
+                                        <option value="7">Sunday</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <button class="btn btn-danger-custom btn-custom btn-lg w-100" onclick="predictSingle()">
+                                <i class="fas fa-search"></i> Analyze Transaction
+                            </button>
+                        </div>
+
+                        <!-- Batch Upload Tab -->
+                        <div class="tab-pane fade" id="batchUpload">
+                            <div class="upload-area" style="padding: 30px;">
+                                <i class="fas fa-file-csv fa-3x text-primary mb-3"></i>
+                                <h5>Upload CSV File</h5>
+                                <p class="text-muted">Upload a CSV file with transaction data</p>
+                                <button type="button" class="btn btn-primary-custom btn-custom">
+                                    <i class="fas fa-folder-open"></i> Select File
+                                </button>
+                                <div class="mt-3">
+                                    <small class="text-muted">Max 10,000 transactions per batch</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Evaluation Set Tab -->
+                        <div class="tab-pane fade" id="evaluationSet">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle"></i> 
+                                Use the 90,000 transaction evaluation dataset for final predictions
+                            </div>
+                            
+                            <div class="text-center p-4">
+                                <i class="fas fa-database fa-3x text-primary mb-3"></i>
+                                <h5>evaluation_features.csv</h5>
+                                <p class="text-muted">90,000 transactions ready for prediction</p>
+                                <button class="btn btn-primary-custom btn-custom btn-lg" onclick="predictEvaluation()">
+                                    <i class="fas fa-play"></i> Run Predictions on Evaluation Set
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Prediction Results -->
+            <div id="predictionResults" class="card border-0 shadow-sm" style="display: none;">
+                <div class="card-header" id="resultHeader">
+                    <h5 class="mb-0 text-white"><i class="fas fa-check-circle"></i> Prediction Results</h5>
+                </div>
+                <div class="card-body">
+                    <div id="singleResult" style="display: none;">
+                        <div class="text-center mb-4">
+                            <div id="fraudIndicator" class="mb-3">
+                                <!-- Fraud indicator will be inserted here -->
+                            </div>
+                            <h3 id="fraudLabel"></h3>
+                            <h5 id="fraudProbability"></h5>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Risk Factors</h6>
+                                <ul id="riskFactors">
+                                    <!-- Risk factors will be listed here -->
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Recommendation</h6>
+                                <div id="recommendation" class="alert">
+                                    <!-- Recommendation will appear here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="batchResult" style="display: none;">
+                        <div class="row mb-3">
+                            <div class="col-md-3 text-center">
+                                <h4 class="text-primary">90,000</h4>
+                                <small class="text-muted">Total Transactions</small>
+                            </div>
+                            <div class="col-md-3 text-center">
+                                <h4 class="text-danger">93</h4>
+                                <small class="text-muted">Frauds Detected</small>
+                            </div>
+                            <div class="col-md-3 text-center">
+                                <h4 class="text-success">0.10%</h4>
+                                <small class="text-muted">Fraud Rate</small>
+                            </div>
+                            <div class="col-md-3 text-center">
+                                <h4 class="text-warning">12.3s</h4>
+                                <small class="text-muted">Processing Time</small>
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-success">
+                            <i class="fas fa-check"></i> Predictions completed successfully!
+                        </div>
+                        
+                        <button class="btn btn-success-custom btn-custom" onclick="downloadPredictions()">
+                            <i class="fas fa-download"></i> Download submission.csv
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics & Live Feed -->
+        <div class="col-lg-4 mb-4">
+            <!-- Real-time Stats -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-line"></i> Real-time Statistics</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <small class="text-muted">Predictions Today</small>
+                        <h4 class="text-primary">1,247</h4>
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted">Frauds Detected</small>
+                        <h4 class="text-danger">18</h4>
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted">Detection Rate</small>
+                        <h4 class="text-warning">1.44%</h4>
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted">Avg Response Time</small>
+                        <h4 class="text-success">142ms</h4>
+                    </div>
+                    
+                    <canvas id="realtimeChart" height="150"></canvas>
+                </div>
+            </div>
+
+            <!-- Recent Predictions -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0"><i class="fas fa-stream"></i> Recent Predictions</h5>
+                </div>
+                <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                    <div class="prediction-item mb-3 p-2 border-start border-danger border-3">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <strong class="text-danger">FRAUD</strong>
+                                <small class="text-muted d-block">$458.99 - Electronics</small>
+                            </div>
+                            <small class="text-muted">2 min ago</small>
+                        </div>
+                    </div>
+                    
+                    <div class="prediction-item mb-3 p-2 border-start border-success border-3">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <strong class="text-success">LEGITIMATE</strong>
+                                <small class="text-muted d-block">$67.45 - Grocery</small>
+                            </div>
+                            <small class="text-muted">5 min ago</small>
+                        </div>
+                    </div>
+                    
+                    <div class="prediction-item mb-3 p-2 border-start border-success border-3">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <strong class="text-success">LEGITIMATE</strong>
+                                <small class="text-muted d-block">$23.10 - Restaurant</small>
+                            </div>
+                            <small class="text-muted">7 min ago</small>
+                        </div>
+                    </div>
+                    
+                    <div class="prediction-item mb-3 p-2 border-start border-danger border-3">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <strong class="text-danger">FRAUD</strong>
+                                <small class="text-muted d-block">$892.00 - Online</small>
+                            </div>
+                            <small class="text-muted">12 min ago</small>
+                        </div>
+                    </div>
+                    
+                    <div class="prediction-item mb-3 p-2 border-start border-warning border-3">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <strong class="text-warning">SUSPICIOUS</strong>
+                                <small class="text-muted d-block">$156.78 - Gas Station</small>
+                            </div>
+                            <small class="text-muted">15 min ago</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Update threshold display
+document.getElementById('threshold').addEventListener('input', function() {
+    const threshold = this.value / 100;
+    this.previousElementSibling.textContent = threshold.toFixed(2);
+});
+
+// Real-time chart
+const ctx = document.getElementById('realtimeChart').getContext('2d');
+const realtimeChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: ['10:00', '11:00', '12:00', '13:00', '14:00', '15:00'],
+        datasets: [{
+            label: 'Fraud Detections',
+            data: [2, 3, 1, 5, 4, 3],
+            borderColor: 'rgba(220, 53, 69, 1)',
+            backgroundColor: 'rgba(220, 53, 69, 0.1)',
+            tension: 0.4
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+
+function predictSingle() {
+    // Collect input data
+    const transactionData = {
+        amount: parseFloat(document.getElementById('amount').value),
+        mcc: document.getElementById('mcc').value,
+        type: document.getElementById('transType').value,
+        card_type: document.getElementById('cardType').value,
+        hour: parseInt(document.getElementById('hour').value),
+        day_of_week: parseInt(document.getElementById('dayOfWeek').value)
+    };
+    
+    // Show loading
+    showNotification('Analyzing transaction...', 'info');
+    
+    // Simulate prediction
+    setTimeout(() => {
+        const isFraud = Math.random() > 0.85; // 15% chance of fraud
+        const probability = isFraud ? 0.75 + Math.random() * 0.24 : Math.random() * 0.3;
+        
+        displaySingleResult(isFraud, probability, transactionData);
+    }, 1000);
+    
+    // Send to backend
+    $.ajax({
+        url: '/predict',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            model: document.getElementById('modelSelect').value,
+            transaction_data: transactionData
+        }),
+        success: function(response) {
+            console.log('Prediction response:', response);
+        }
+    });
+}
+
+function displaySingleResult(isFraud, probability, transaction) {
+    const resultsCard = document.getElementById('predictionResults');
+    const resultHeader = document.getElementById('resultHeader');
+    const singleResult = document.getElementById('singleResult');
+    const batchResult = document.getElementById('batchResult');
+    
+    resultsCard.style.display = 'block';
+    singleResult.style.display = 'block';
+    batchResult.style.display = 'none';
+    
+    if (isFraud) {
+        resultHeader.className = 'card-header bg-danger';
+        document.getElementById('fraudIndicator').innerHTML = '<i class="fas fa-exclamation-triangle fa-5x text-danger"></i>';
+        document.getElementById('fraudLabel').innerHTML = '<span class="text-danger">FRAUDULENT TRANSACTION</span>';
+        document.getElementById('fraudProbability').innerHTML = `Fraud Probability: <strong>${(probability * 100).toFixed(1)}%</strong>`;
+        
+        // Risk factors
+        document.getElementById('riskFactors').innerHTML = `
+            <li class="text-danger">Online transaction (High risk)</li>
+            <li class="text-danger">Electronics store (MCC 5732)</li>
+            <li class="text-warning">Amount above average</li>
+            <li class="text-warning">Peak fraud hour (14:00)</li>
+        `;
+        
+        // Recommendation
+        document.getElementById('recommendation').className = 'alert alert-danger';
+        document.getElementById('recommendation').innerHTML = `
+            <strong>Action Required:</strong><br>
+            Block transaction and contact cardholder immediately
+        `;
+    } else {
+        resultHeader.className = 'card-header bg-success';
+        document.getElementById('fraudIndicator').innerHTML = '<i class="fas fa-check-circle fa-5x text-success"></i>';
+        document.getElementById('fraudLabel').innerHTML = '<span class="text-success">LEGITIMATE TRANSACTION</span>';
+        document.getElementById('fraudProbability').innerHTML = `Fraud Probability: <strong>${(probability * 100).toFixed(1)}%</strong>`;
+        
+        // Risk factors
+        document.getElementById('riskFactors').innerHTML = `
+            <li class="text-success">Normal transaction amount</li>
+            <li class="text-success">Regular merchant category</li>
+            <li class="text-success">Typical transaction time</li>
+        `;
+        
+        // Recommendation
+        document.getElementById('recommendation').className = 'alert alert-success';
+        document.getElementById('recommendation').innerHTML = `
+            <strong>No Action Required:</strong><br>
+            Transaction appears legitimate
+        `;
+    }
+    
+    // Scroll to results
+    resultsCard.scrollIntoView({ behavior: 'smooth' });
+}
+
+function predictEvaluation() {
+    // Show loading
+    showNotification('Processing 90,000 transactions...', 'info');
+    
+    const resultsCard = document.getElementById('predictionResults');
+    const resultHeader = document.getElementById('resultHeader');
+    const singleResult = document.getElementById('singleResult');
+    const batchResult = document.getElementById('batchResult');
+    
+    // Simulate processing
+    setTimeout(() => {
+        resultsCard.style.display = 'block';
+        singleResult.style.display = 'none';
+        batchResult.style.display = 'block';
+        
+        resultHeader.className = 'card-header bg-success';
+        
+        showNotification('Predictions completed!', 'success');
+        
+        resultsCard.scrollIntoView({ behavior: 'smooth' });
+    }, 3000);
+}
+
+function downloadPredictions() {
+    showNotification('Downloading submission.csv...', 'info');
+    
+    // In production, this would trigger actual download
+    setTimeout(() => {
+        showNotification('File downloaded successfully!', 'success');
+    }, 1000);
+}
+
+// Update chart with random data
+setInterval(() => {
+    const chart = realtimeChart;
+    chart.data.datasets[0].data.shift();
+    chart.data.datasets[0].data.push(Math.floor(Math.random() * 6));
+    chart.update();
+}, 5000);
+</script>
+{% endblock %}

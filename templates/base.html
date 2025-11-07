@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Fraud Detection Dashboard - ESILV Hackathon{% endblock %}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <style>
+        :root {
+            --primary-color: #1e3d59;
+            --secondary-color: #f5b553;
+            --accent-color: #e94560;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --dark-bg: #0f1419;
+            --light-bg: #f8f9fa;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .main-container {
+            background: rgba(255, 255, 255, 0.95);
+            min-height: 100vh;
+            margin: 20px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        /* Header */
+        .dashboard-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #2d5a7b 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 20px 20px 0 0;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .dashboard-header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: bold;
+        }
+        
+        .dashboard-header .subtitle {
+            opacity: 0.9;
+            margin-top: 10px;
+        }
+        
+        .ibm-badge {
+            background: #0f62fe;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            display: inline-block;
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+        
+        /* Navigation */
+        .nav-tabs-custom {
+            background: white;
+            padding: 20px 30px 0;
+            border-bottom: 2px solid #e9ecef;
+            margin-bottom: 30px;
+        }
+        
+        .nav-tabs-custom .nav-link {
+            color: #6c757d;
+            border: none;
+            padding: 12px 25px;
+            margin-right: 10px;
+            border-radius: 10px 10px 0 0;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+        
+        .nav-tabs-custom .nav-link:hover {
+            background: #f8f9fa;
+            color: var(--primary-color);
+        }
+        
+        .nav-tabs-custom .nav-link.active {
+            background: var(--primary-color);
+            color: white;
+            box-shadow: 0 -3px 10px rgba(30, 61, 89, 0.2);
+        }
+        
+        .nav-tabs-custom .nav-link i {
+            margin-right: 8px;
+        }
+        
+        /* Content Area */
+        .content-area {
+            padding: 30px;
+        }
+        
+        /* Cards */
+        .stat-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            transition: transform 0.3s, box-shadow 0.3s;
+            border: 1px solid #e9ecef;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+        
+        .stat-card .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+        
+        .stat-card.primary .stat-icon {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .stat-card.success .stat-icon {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+        
+        .stat-card.danger .stat-icon {
+            background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+            color: white;
+        }
+        
+        .stat-card.warning .stat-icon {
+            background: linear-gradient(135deg, #f2994a 0%, #f2c94c 100%);
+            color: white;
+        }
+        
+        .stat-card h3 {
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 10px 0;
+            color: var(--primary-color);
+        }
+        
+        .stat-card p {
+            color: #6c757d;
+            margin: 0;
+            font-size: 0.9rem;
+        }
+        
+        /* Buttons */
+        .btn-custom {
+            padding: 12px 30px;
+            border-radius: 10px;
+            font-weight: 500;
+            transition: all 0.3s;
+            border: none;
+        }
+        
+        .btn-primary-custom {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #2d5a7b 100%);
+            color: white;
+        }
+        
+        .btn-primary-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(30, 61, 89, 0.4);
+            color: white;
+        }
+        
+        .btn-success-custom {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+        
+        .btn-danger-custom {
+            background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+            color: white;
+        }
+        
+        /* Tables */
+        .custom-table {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        }
+        
+        .custom-table thead {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .custom-table th {
+            border: none;
+            padding: 15px;
+            font-weight: 500;
+        }
+        
+        .custom-table td {
+            padding: 15px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .custom-table tbody tr:hover {
+            background: #f8f9fa;
+        }
+        
+        /* Progress bars */
+        .progress-custom {
+            height: 25px;
+            border-radius: 10px;
+            background: #e9ecef;
+        }
+        
+        .progress-bar-custom {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #2d5a7b 100%);
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        /* Alerts */
+        .alert-custom {
+            border-radius: 10px;
+            border: none;
+            padding: 15px 20px;
+        }
+        
+        .alert-watson {
+            background: linear-gradient(135deg, #0f62fe 0%, #0043ce 100%);
+            color: white;
+        }
+        
+        /* Loading spinner */
+        .spinner-custom {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* File upload area */
+        .upload-area {
+            border: 3px dashed #dee2e6;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            transition: all 0.3s;
+            background: #f8f9fa;
+        }
+        
+        .upload-area:hover {
+            border-color: var(--primary-color);
+            background: white;
+        }
+        
+        .upload-area.dragover {
+            border-color: var(--secondary-color);
+            background: #fff9e6;
+        }
+        
+        /* Footer */
+        .dashboard-footer {
+            background: #f8f9fa;
+            padding: 20px 30px;
+            border-top: 1px solid #dee2e6;
+            border-radius: 0 0 20px 20px;
+            margin-top: 50px;
+            text-align: center;
+            color: #6c757d;
+        }
+        
+        /* Watson X Integration Status */
+        .watson-status {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+            z-index: 1000;
+        }
+        
+        .watson-status.connected {
+            border-left: 4px solid #28a745;
+        }
+        
+        .watson-status.disconnected {
+            border-left: 4px solid #dc3545;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .main-container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+            
+            .dashboard-header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .nav-tabs-custom .nav-link {
+                padding: 10px 15px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- Header -->
+        <div class="dashboard-header">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1><i class="fas fa-shield-alt"></i> Fraud Detection Dashboard</h1>
+                    <div class="subtitle">ESILV Hackathon 2025 - Track Finance</div>
+                    <span class="ibm-badge">
+                        <i class="fab fa-bandcamp"></i> Powered by IBM Watson X
+                    </span>
+                </div>
+                <div class="col-md-4 text-end">
+                    <div class="text-white">
+                        <i class="fas fa-clock"></i> <span id="current-time"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Navigation -->
+        <nav class="nav-tabs-custom">
+            <ul class="nav nav-tabs border-0">
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'upload_page' %}active{% endif %}" href="{{ url_for('upload_page') }}">
+                        <i class="fas fa-upload"></i> Data Upload
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'preprocessing_page' %}active{% endif %}" href="{{ url_for('preprocessing_page') }}">
+                        <i class="fas fa-cogs"></i> Preprocessing
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'training_page' %}active{% endif %}" href="{{ url_for('training_page') }}">
+                        <i class="fas fa-brain"></i> Model Training
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'models_page' %}active{% endif %}" href="{{ url_for('models_page') }}">
+                        <i class="fas fa-database"></i> Models
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'prediction_page' %}active{% endif %}" href="{{ url_for('prediction_page') }}">
+                        <i class="fas fa-magic"></i> Prediction
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'visualization_page' %}active{% endif %}" href="{{ url_for('visualization_page') }}">
+                        <i class="fas fa-chart-bar"></i> Visualization
+                    </a>
+                </li>
+            </ul>
+        </nav>
+        
+        <!-- Content Area -->
+        <div class="content-area">
+            {% block content %}{% endblock %}
+        </div>
+        
+        <!-- Footer -->
+        <div class="dashboard-footer">
+            <p class="mb-0">© 2025 ESILV Hackathon - Fraud Detection System | Developed by Serdar</p>
+        </div>
+    </div>
+    
+    <!-- Watson Status Indicator -->
+    <div class="watson-status disconnected" id="watson-status">
+        <div class="d-flex align-items-center">
+            <div class="spinner-border spinner-border-sm me-2" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <span id="watson-status-text">Checking Watson X...</span>
+        </div>
+    </div>
+    
+    <!-- Global JavaScript -->
+    <script>
+        // Update current time
+        function updateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleString('fr-FR', { 
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            document.getElementById('current-time').textContent = timeString;
+        }
+        
+        updateTime();
+        setInterval(updateTime, 1000);
+        
+        // Check Watson X status
+        function checkWatsonStatus() {
+            $.ajax({
+                url: '/api/watson/status',
+                method: 'GET',
+                success: function(data) {
+                    const statusElement = $('#watson-status');
+                    const statusText = $('#watson-status-text');
+                    
+                    if (data.connected) {
+                        statusElement.removeClass('disconnected').addClass('connected');
+                        statusText.html('<i class="fas fa-check-circle text-success"></i> Watson X Connected');
+                    } else {
+                        statusElement.removeClass('connected').addClass('disconnected');
+                        statusText.html('<i class="fas fa-exclamation-circle text-warning"></i> Watson X: ' + data.message);
+                    }
+                    
+                    // Hide after 5 seconds
+                    setTimeout(function() {
+                        statusElement.fadeOut();
+                    }, 5000);
+                }
+            });
+        }
+        
+        // Check Watson status on page load
+        $(document).ready(function() {
+            checkWatsonStatus();
+        });
+        
+        // Global notification function
+        function showNotification(message, type = 'info') {
+            const alertClass = type === 'success' ? 'alert-success' : 
+                             type === 'error' ? 'alert-danger' :
+                             type === 'warning' ? 'alert-warning' : 'alert-info';
+            
+            const notification = $(`
+                <div class="alert ${alertClass} alert-dismissible fade show alert-custom position-fixed" 
+                     style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `);
+            
+            $('body').append(notification);
+            
+            setTimeout(function() {
+                notification.alert('close');
+            }, 5000);
+        }
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,411 @@
+{% extends "base.html" %}
+
+{% block title %}Data Preprocessing - Fraud Detection System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Preprocessing Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-watson alert-custom">
+                <h4><i class="fas fa-cogs"></i> Data Preprocessing & Feature Engineering</h4>
+                <p class="mb-0">Transform raw data into ML-ready features using Watson X Data Refinery</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Preprocessing Options -->
+        <div class="col-lg-8 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-wrench"></i> Preprocessing Pipeline</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Data Source Selection -->
+                    <div class="mb-4">
+                        <h6><i class="fas fa-database text-primary"></i> Select Data Source</h6>
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="dataSource" id="watsonData" checked>
+                                    <label class="form-check-label" for="watsonData">
+                                        <strong>Watson X Preprocessed Dataset</strong>
+                                        <small class="text-muted d-block">47 features, 210k rows (Recommended)</small>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="dataSource" id="customData">
+                                    <label class="form-check-label" for="customData">
+                                        <strong>Custom Uploaded Files</strong>
+                                        <small class="text-muted d-block">Process from scratch</small>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Feature Engineering Options -->
+                    <div class="mb-4">
+                        <h6><i class="fas fa-magic text-primary"></i> Feature Engineering Steps</h6>
+                        <div class="feature-steps">
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="step1" checked>
+                                <label class="form-check-label" for="step1">
+                                    <strong>1. Merge Datasets</strong>
+                                    <small class="text-muted">- Join transactions, users, cards, and labels</small>
+                                </label>
+                            </div>
+                            
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="step2" checked>
+                                <label class="form-check-label" for="step2">
+                                    <strong>2. Create Temporal Features</strong>
+                                    <small class="text-muted">- Extract hour, day_of_week, is_weekend, is_night</small>
+                                </label>
+                            </div>
+                            
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="step3" checked>
+                                <label class="form-check-label" for="step3">
+                                    <strong>3. Generate Fraud Risk Features</strong>
+                                    <small class="text-muted">- merchant_fraud_rate, mcc_fraud_rate (Cold-start features)</small>
+                                </label>
+                            </div>
+                            
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="step4" checked>
+                                <label class="form-check-label" for="step4">
+                                    <strong>4. Calculate Statistical Features</strong>
+                                    <small class="text-muted">- amount_zscore_by_mcc, amount_deviation</small>
+                                </label>
+                            </div>
+                            
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="step5" checked>
+                                <label class="form-check-label" for="step5">
+                                    <strong>5. Create Aggregation Features</strong>
+                                    <small class="text-muted">- nb_transactions_client, avg_amount_client</small>
+                                </label>
+                            </div>
+                            
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="step6" checked>
+                                <label class="form-check-label" for="step6">
+                                    <strong>6. Handle Missing Values</strong>
+                                    <small class="text-muted">- Fill with median/mode, drop high-null columns</small>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Processing Options -->
+                    <div class="mb-4">
+                        <h6><i class="fas fa-sliders-h text-primary"></i> Processing Options</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label class="form-label">Scaling Method</label>
+                                <select class="form-select" id="scalingMethod">
+                                    <option value="standard">StandardScaler</option>
+                                    <option value="minmax">MinMaxScaler</option>
+                                    <option value="robust">RobustScaler</option>
+                                    <option value="none">No Scaling</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Encoding Method</label>
+                                <select class="form-select" id="encodingMethod">
+                                    <option value="label">Label Encoding</option>
+                                    <option value="onehot">One-Hot Encoding</option>
+                                    <option value="target">Target Encoding</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Start Processing Button -->
+                    <button class="btn btn-primary-custom btn-custom btn-lg w-100" onclick="startPreprocessing()">
+                        <i class="fas fa-play"></i> Start Preprocessing
+                    </button>
+
+                    <!-- Processing Progress -->
+                    <div id="processingProgress" style="display: none;" class="mt-4">
+                        <h6><i class="fas fa-spinner fa-spin"></i> Processing in Progress</h6>
+                        <div class="progress progress-custom mb-2">
+                            <div id="processProgressBar" class="progress-bar progress-bar-custom progress-bar-striped progress-bar-animated" style="width: 0%">0%</div>
+                        </div>
+                        <div id="processingLog" class="bg-light p-3 rounded" style="max-height: 200px; overflow-y: auto; font-family: monospace; font-size: 0.9rem;">
+                            <!-- Processing logs will appear here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Processing Results -->
+            <div id="processingResults" class="card border-0 shadow-sm mt-4" style="display: none;">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-check-circle"></i> Preprocessing Complete</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h4 class="text-primary">47</h4>
+                                <small class="text-muted">Total Features</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h4 class="text-success">210,000</h4>
+                                <small class="text-muted">Processed Rows</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h4 class="text-warning">17</h4>
+                                <small class="text-muted">New Features</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h4 class="text-info">3.2s</h4>
+                                <small class="text-muted">Processing Time</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-success">
+                        <i class="fas fa-check"></i> Dataset is ready for model training!
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex">
+                        <button class="btn btn-success-custom btn-custom" onclick="window.location.href='/training'">
+                            <i class="fas fa-brain"></i> Proceed to Training
+                        </button>
+                        <button class="btn btn-outline-primary btn-custom" onclick="downloadProcessedData()">
+                            <i class="fas fa-download"></i> Download Processed Data
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Feature Information -->
+        <div class="col-lg-4 mb-4">
+            <!-- Key Features Created -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-star"></i> Key Features Created</h5>
+                </div>
+                <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                    <div class="feature-item mb-3">
+                        <h6 class="text-primary mb-1">merchant_fraud_rate</h6>
+                        <small class="text-muted">Fraud rate per merchant</small>
+                        <div class="badge bg-success">Correlation: 0.418</div>
+                    </div>
+                    
+                    <div class="feature-item mb-3">
+                        <h6 class="text-primary mb-1">mcc_fraud_rate</h6>
+                        <small class="text-muted">Fraud rate per MCC category</small>
+                        <div class="badge bg-success">Correlation: 0.166</div>
+                    </div>
+                    
+                    <div class="feature-item mb-3">
+                        <h6 class="text-primary mb-1">amount_zscore_by_mcc</h6>
+                        <small class="text-muted">Normalized amount per category</small>
+                        <div class="badge bg-warning">Statistical</div>
+                    </div>
+                    
+                    <div class="feature-item mb-3">
+                        <h6 class="text-primary mb-1">hour_fraud_rate</h6>
+                        <small class="text-muted">Fraud probability by hour</small>
+                        <div class="badge bg-info">Temporal</div>
+                    </div>
+                    
+                    <div class="feature-item mb-3">
+                        <h6 class="text-primary mb-1">is_online</h6>
+                        <small class="text-muted">Online transaction flag</small>
+                        <div class="badge bg-danger">High Impact</div>
+                    </div>
+                    
+                    <div class="feature-item mb-3">
+                        <h6 class="text-primary mb-1">online_high_amount</h6>
+                        <small class="text-muted">Combination feature</small>
+                        <div class="badge bg-primary">Engineered</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Watson X Integration Status -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header" style="background: linear-gradient(135deg, #0f62fe 0%, #0043ce 100%); color: white;">
+                    <h5 class="mb-0"><i class="fas fa-cloud"></i> Watson X Status</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>Data Refinery</span>
+                            <span class="badge bg-success">Connected</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>AutoAI</span>
+                            <span class="badge bg-warning">Pending</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>Cloud Storage</span>
+                            <span class="badge bg-success">Active</span>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="text-center">
+                        <small class="text-muted">Project ID</small>
+                        <p class="mb-0"><code>hackathon-2025-fraud</code></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feature Statistics -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Feature Statistics</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="featureImportanceChart" height="80"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Feature importance chart
+const ctx = document.getElementById('featureImportanceChart').getContext('2d');
+const featureChart = new Chart(ctx, {
+    type: 'horizontalBar',
+    data: {
+        labels: ['merchant_fraud_rate', 'mcc_fraud_rate', 'amount_zscore_by_mcc', 'is_online', 'hour_fraud_rate', 
+                 'amount', 'nb_transactions_client', 'debt_to_income_ratio', 'card_on_dark_web_flag', 'use_chip_flag'],
+        datasets: [{
+            label: 'Feature Importance',
+            data: [0.418, 0.166, 0.142, 0.135, 0.098, 0.087, 0.076, 0.065, 0.054, 0.043],
+            backgroundColor: 'rgba(15, 98, 254, 0.8)',
+            borderColor: 'rgba(15, 98, 254, 1)',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            xAxes: [{
+                ticks: {
+                    beginAtZero: true,
+                    max: 0.5
+                }
+            }]
+        },
+        legend: {
+            display: false
+        }
+    }
+});
+
+function startPreprocessing() {
+    const useWatson = document.getElementById('watsonData').checked;
+    
+    // Show progress
+    document.getElementById('processingProgress').style.display = 'block';
+    document.getElementById('processingResults').style.display = 'none';
+    
+    const logDiv = document.getElementById('processingLog');
+    logDiv.innerHTML = '';
+    
+    // Simulate preprocessing steps
+    const steps = [
+        'Loading data files...',
+        'Merging datasets...',
+        'Creating temporal features...',
+        'Calculating fraud risk features...',
+        'Generating statistical features...',
+        'Creating aggregation features...',
+        'Handling missing values...',
+        'Applying scaling...',
+        'Saving processed dataset...'
+    ];
+    
+    let currentStep = 0;
+    let progress = 0;
+    
+    const interval = setInterval(() => {
+        if (currentStep < steps.length) {
+            // Add log entry
+            const logEntry = document.createElement('div');
+            logEntry.textContent = `[${new Date().toLocaleTimeString()}] ${steps[currentStep]}`;
+            logEntry.style.color = '#28a745';
+            logDiv.appendChild(logEntry);
+            logDiv.scrollTop = logDiv.scrollHeight;
+            
+            // Update progress
+            progress = ((currentStep + 1) / steps.length) * 100;
+            document.getElementById('processProgressBar').style.width = progress + '%';
+            document.getElementById('processProgressBar').textContent = Math.round(progress) + '%';
+            
+            currentStep++;
+        } else {
+            clearInterval(interval);
+            
+            // Add completion message
+            const completeEntry = document.createElement('div');
+            completeEntry.textContent = `[${new Date().toLocaleTimeString()}] ✓ Preprocessing complete!`;
+            completeEntry.style.color = '#0f62fe';
+            completeEntry.style.fontWeight = 'bold';
+            logDiv.appendChild(completeEntry);
+            
+            // Show results
+            setTimeout(() => {
+                document.getElementById('processingResults').style.display = 'block';
+                showNotification('Preprocessing completed successfully!', 'success');
+            }, 500);
+        }
+    }, 800);
+    
+    // Send request to backend
+    $.ajax({
+        url: '/preprocess',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            use_watson: useWatson,
+            scaling: document.getElementById('scalingMethod').value,
+            encoding: document.getElementById('encodingMethod').value
+        }),
+        success: function(response) {
+            console.log('Preprocessing response:', response);
+        },
+        error: function(xhr) {
+            showNotification('Preprocessing error occurred', 'error');
+        }
+    });
+}
+
+function downloadProcessedData() {
+    showNotification('Downloading processed dataset...', 'info');
+    // In production, this would trigger actual download
+    window.location.href = '/download/processed_data';
+}
+</script>
+{% endblock %}

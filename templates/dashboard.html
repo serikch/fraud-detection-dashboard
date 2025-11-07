@@ -1,0 +1,368 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Fraud Detection System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Welcome Alert -->
+    <div class="alert alert-watson alert-custom mb-4">
+        <h4 class="alert-heading"><i class="fas fa-robot"></i> Welcome to Fraud Detection Dashboard!</h4>
+        <p class="mb-0">Système de détection de fraude bancaire utilisant IBM Watson X.ai - ESILV Hackathon 2025</p>
+    </div>
+
+    <!-- Key Metrics Row -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-card primary">
+                <div class="stat-icon">
+                    <i class="fas fa-exchange-alt"></i>
+                </div>
+                <h3>{{ stats.total_transactions|default(210000) }}</h3>
+                <p>Total Transactions</p>
+                <small class="text-muted">Dataset complet Watson X</small>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-card danger">
+                <div class="stat-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <h3>{{ "%.2f"|format(stats.fraud_rate|default(0.15)) }}%</h3>
+                <p>Taux de Fraude</p>
+                <small class="text-muted">Cold-start challenge</small>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-card success">
+                <div class="stat-icon">
+                    <i class="fas fa-graduation-cap"></i>
+                </div>
+                <h3>{{ stats.models_trained|default(0) }}</h3>
+                <p>Modèles Entraînés</p>
+                <small class="text-muted">AutoAI & Custom</small>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-card warning">
+                <div class="stat-icon">
+                    <i class="fas fa-percentage"></i>
+                </div>
+                <h3>{{ "%.1f"|format(stats.best_model_accuracy * 100) if stats.best_model_accuracy else "N/A" }}</h3>
+                <p>Meilleure Précision</p>
+                <small class="text-muted">ROC-AUC Score</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Progress Section -->
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-tasks"></i> Pipeline Progress</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span><i class="fas fa-upload text-primary"></i> Data Upload</span>
+                            <span class="badge bg-success">Complete</span>
+                        </div>
+                        <div class="progress progress-custom">
+                            <div class="progress-bar progress-bar-custom" style="width: 100%">100%</div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span><i class="fas fa-cogs text-primary"></i> Preprocessing & Feature Engineering</span>
+                            <span class="badge bg-success">Complete</span>
+                        </div>
+                        <div class="progress progress-custom">
+                            <div class="progress-bar progress-bar-custom" style="width: 100%">100%</div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span><i class="fas fa-brain text-primary"></i> Model Training (AutoAI)</span>
+                            <span class="badge bg-warning">In Progress</span>
+                        </div>
+                        <div class="progress progress-custom">
+                            <div class="progress-bar progress-bar-custom progress-bar-striped progress-bar-animated" style="width: 60%">60%</div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span><i class="fas fa-magic text-primary"></i> Prediction & Evaluation</span>
+                            <span class="badge bg-secondary">Pending</span>
+                        </div>
+                        <div class="progress progress-custom">
+                            <div class="progress-bar progress-bar-custom" style="width: 0%">0%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-info-circle"></i> System Status</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <small class="text-muted">Watson X Connection</small>
+                        <div class="d-flex align-items-center mt-1">
+                            <div class="spinner-border spinner-border-sm text-warning me-2" role="status"></div>
+                            <span>Connecting to Watson X.ai...</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <small class="text-muted">Dataset Status</small>
+                        <div class="d-flex align-items-center mt-1">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            <span>Watson X Dataset Loaded</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <small class="text-muted">Memory Usage</small>
+                        <div class="progress" style="height: 10px;">
+                            <div class="progress-bar bg-success" style="width: 35%"></div>
+                        </div>
+                        <small class="text-muted">35% (1.2GB / 4GB)</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <small class="text-muted">Last Activity</small>
+                        <div class="mt-1">
+                            <small>{{ stats.last_prediction|default("No predictions yet") }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dataset Overview -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0"><i class="fas fa-database"></i> Dataset Overview</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Training Data</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-check text-success"></i> 210,000 transactions (2016-2018)</li>
+                                <li><i class="fas fa-check text-success"></i> 315 fraud cases (0.15%)</li>
+                                <li><i class="fas fa-check text-success"></i> 6,146 unique cards</li>
+                                <li><i class="fas fa-check text-success"></i> 2,000 unique users</li>
+                                <li><i class="fas fa-check text-success"></i> 47 features after engineering</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Key Features Created</h6>
+                            <ul class="list-unstyled">
+                                <li><span class="badge bg-primary">merchant_fraud_rate</span> <small>Correlation: 0.418</small></li>
+                                <li><span class="badge bg-primary">mcc_fraud_rate</span> <small>Correlation: 0.166</small></li>
+                                <li><span class="badge bg-primary">amount_zscore_by_mcc</span> <small>Normalized amounts</small></li>
+                                <li><span class="badge bg-primary">hour_fraud_rate</span> <small>Temporal patterns</small></li>
+                                <li><span class="badge bg-primary">is_online</span> <small>Transaction type</small></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0"><i class="fas fa-rocket"></i> Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3 mb-3">
+                            <a href="{{ url_for('upload_page') }}" class="btn btn-lg btn-primary-custom btn-custom w-100">
+                                <i class="fas fa-upload fa-2x mb-2 d-block"></i>
+                                Upload New Data
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{{ url_for('preprocessing_page') }}" class="btn btn-lg btn-primary-custom btn-custom w-100">
+                                <i class="fas fa-cogs fa-2x mb-2 d-block"></i>
+                                Process Data
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{{ url_for('training_page') }}" class="btn btn-lg btn-success-custom btn-custom w-100">
+                                <i class="fas fa-brain fa-2x mb-2 d-block"></i>
+                                Train Model
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{{ url_for('prediction_page') }}" class="btn btn-lg btn-danger-custom btn-custom w-100">
+                                <i class="fas fa-magic fa-2x mb-2 d-block"></i>
+                                Make Prediction
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity & Model Performance -->
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-history"></i> Recent Activity</h5>
+                </div>
+                <div class="card-body">
+                    <div class="activity-feed" id="activity-feed">
+                        <div class="activity-item mb-3">
+                            <div class="d-flex">
+                                <div class="activity-icon bg-success text-white rounded-circle p-2 me-3">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                                <div>
+                                    <strong>Watson X Dataset Loaded</strong>
+                                    <p class="mb-0 text-muted small">47 features engineered successfully</p>
+                                    <small class="text-muted">2 minutes ago</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="activity-item mb-3">
+                            <div class="d-flex">
+                                <div class="activity-icon bg-warning text-white rounded-circle p-2 me-3">
+                                    <i class="fas fa-sync"></i>
+                                </div>
+                                <div>
+                                    <strong>AutoAI Training Started</strong>
+                                    <p class="mb-0 text-muted small">4 pipelines being evaluated</p>
+                                    <small class="text-muted">5 minutes ago</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="activity-item mb-3">
+                            <div class="d-flex">
+                                <div class="activity-icon bg-info text-white rounded-circle p-2 me-3">
+                                    <i class="fas fa-database"></i>
+                                </div>
+                                <div>
+                                    <strong>Data Preprocessing Complete</strong>
+                                    <p class="mb-0 text-muted small">Cold-start features generated</p>
+                                    <small class="text-muted">10 minutes ago</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-line"></i> Model Performance</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="performanceChart"></canvas>
+                    <div class="mt-3">
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle"></i> 
+                            Comparaison des modèles: Logistic Regression vs LightGBM vs AutoAI
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Challenge Info -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="alert alert-info alert-custom">
+                <h5><i class="fas fa-trophy"></i> Hackathon Challenge</h5>
+                <p class="mb-2"><strong>Cold-Start Problem:</strong> Les clients frauduleux du train sont 100% différents de ceux de l'évaluation.</p>
+                <p class="mb-0"><strong>Solution Approach:</strong> Features génériques (merchant_fraud_rate, mcc_patterns) pour généralisation optimale.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Performance Chart
+const ctx = document.getElementById('performanceChart').getContext('2d');
+const performanceChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: ['Logistic Regression', 'LightGBM', 'AutoAI Pipeline 1', 'AutoAI Pipeline 2'],
+        datasets: [{
+            label: 'ROC-AUC Score',
+            data: [0.9367, 0.6811, 0.92, 0.89],
+            backgroundColor: [
+                'rgba(30, 61, 89, 0.8)',
+                'rgba(245, 181, 83, 0.8)',
+                'rgba(15, 98, 254, 0.8)',
+                'rgba(0, 67, 206, 0.8)'
+            ],
+            borderColor: [
+                'rgba(30, 61, 89, 1)',
+                'rgba(245, 181, 83, 1)',
+                'rgba(15, 98, 254, 1)',
+                'rgba(0, 67, 206, 1)'
+            ],
+            borderWidth: 2
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: true,
+                max: 1,
+                ticks: {
+                    callback: function(value) {
+                        return (value * 100).toFixed(0) + '%';
+                    }
+                }
+            }
+        },
+        plugins: {
+            legend: {
+                display: false
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        return 'ROC-AUC: ' + (context.parsed.y * 100).toFixed(2) + '%';
+                    }
+                }
+            }
+        }
+    }
+});
+
+// Auto-refresh activity feed
+setInterval(function() {
+    // This would normally fetch new activities from the server
+    console.log('Checking for new activities...');
+}, 30000); // Every 30 seconds
+</script>
+{% endblock %}

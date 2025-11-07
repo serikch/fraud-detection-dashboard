@@ -1,0 +1,523 @@
+{% extends "base.html" %}
+
+{% block title %}Visualization - Fraud Detection System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Visualization Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-success alert-custom">
+                <h4><i class="fas fa-chart-bar"></i> Analytics & Visualization Dashboard</h4>
+                <p class="mb-0">Interactive visualizations and insights from fraud detection patterns</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Key Metrics Overview -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-percentage fa-2x text-danger mb-2"></i>
+                    <h5>Fraud Rate</h5>
+                    <h3 class="text-danger">0.15%</h3>
+                    <small class="text-muted">315 / 210,000</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-dollar-sign fa-2x text-warning mb-2"></i>
+                    <h5>Avg Fraud Amount</h5>
+                    <h3 class="text-warning">$112.47</h3>
+                    <small class="text-muted">vs $42.31 legitimate</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-globe fa-2x text-primary mb-2"></i>
+                    <h5>Online Fraud Rate</h5>
+                    <h3 class="text-primary">0.73%</h3>
+                    <small class="text-muted">10x higher than chip</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-store fa-2x text-success mb-2"></i>
+                    <h5>Riskiest MCC</h5>
+                    <h3 class="text-success">5732</h3>
+                    <small class="text-muted">Electronics Stores</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Charts Row -->
+    <div class="row mb-4">
+        <!-- Fraud Distribution by Hour -->
+        <div class="col-lg-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-clock"></i> Fraud Distribution by Hour</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="fraudByHourChart" height="300"></canvas>
+                    <div class="mt-3 text-center">
+                        <span class="badge bg-danger">Peak: 10:00-14:00</span>
+                        <span class="badge bg-success">Low: 02:00-06:00</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Fraud by Transaction Type -->
+        <div class="col-lg-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0"><i class="fas fa-credit-card"></i> Fraud by Transaction Type</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="fraudByTypeChart" height="300"></canvas>
+                    <div class="mt-3">
+                        <div class="progress" style="height: 25px;">
+                            <div class="progress-bar bg-danger" style="width: 73%">Online: 0.73%</div>
+                            <div class="progress-bar bg-warning" style="width: 20%">Swipe: 0.20%</div>
+                            <div class="progress-bar bg-success" style="width: 7%">Chip: 0.07%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MCC Analysis -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-warning">
+                    <h5 class="mb-0 text-dark"><i class="fas fa-store"></i> Fraud Rate by Merchant Category (MCC)</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="mccFraudChart" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Amount Analysis -->
+    <div class="row mb-4">
+        <!-- Amount Distribution -->
+        <div class="col-lg-8 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-dollar-sign"></i> Transaction Amount Distribution</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="amountDistributionChart" height="150"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Risk Indicators -->
+        <div class="col-lg-4 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Top Risk Indicators</h5>
+                </div>
+                <div class="card-body">
+                    <div class="risk-indicator mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span><i class="fas fa-wifi text-danger"></i> Online Transaction</span>
+                            <span class="badge bg-danger">10x risk</span>
+                        </div>
+                        <div class="progress mt-1" style="height: 8px;">
+                            <div class="progress-bar bg-danger" style="width: 90%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="risk-indicator mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span><i class="fas fa-laptop text-warning"></i> Electronics (5732)</span>
+                            <span class="badge bg-warning">9.5% fraud</span>
+                        </div>
+                        <div class="progress mt-1" style="height: 8px;">
+                            <div class="progress-bar bg-warning" style="width: 75%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="risk-indicator mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span><i class="fas fa-moon text-info"></i> Night Hours</span>
+                            <span class="badge bg-info">3x risk</span>
+                        </div>
+                        <div class="progress mt-1" style="height: 8px;">
+                            <div class="progress-bar bg-info" style="width: 60%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="risk-indicator mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span><i class="fas fa-calendar-week text-primary"></i> Weekend</span>
+                            <span class="badge bg-primary">2x risk</span>
+                        </div>
+                        <div class="progress mt-1" style="height: 8px;">
+                            <div class="progress-bar bg-primary" style="width: 45%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="risk-indicator mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span><i class="fas fa-chart-line text-success"></i> High Amount</span>
+                            <span class="badge bg-success">1.5x risk</span>
+                        </div>
+                        <div class="progress mt-1" style="height: 8px;">
+                            <div class="progress-bar bg-success" style="width: 30%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Geographic & Temporal Analysis -->
+    <div class="row mb-4">
+        <!-- Heatmap -->
+        <div class="col-lg-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-fire"></i> Fraud Heatmap (Day × Hour)</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="fraudHeatmap" height="250"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Time Series -->
+        <div class="col-lg-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                    <h5 class="mb-0"><i class="fas fa-chart-line"></i> Fraud Trend Over Time</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="fraudTimeSeries" height="250"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Model Performance Visualization -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header" style="background: linear-gradient(135deg, #0f62fe 0%, #0043ce 100%); color: white;">
+                    <h5 class="mb-0"><i class="fas fa-brain"></i> Model Performance Metrics</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <h6 class="text-center">ROC Curve</h6>
+                            <canvas id="rocCurve" height="250"></canvas>
+                        </div>
+                        <div class="col-md-4">
+                            <h6 class="text-center">Confusion Matrix</h6>
+                            <canvas id="confusionMatrix" height="250"></canvas>
+                        </div>
+                        <div class="col-md-4">
+                            <h6 class="text-center">Feature Importance</h6>
+                            <canvas id="featureImportance" height="250"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Options -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <h5 class="mb-3">Export Visualizations</h5>
+                    <div class="btn-group">
+                        <button class="btn btn-outline-primary btn-custom" onclick="exportPDF()">
+                            <i class="fas fa-file-pdf"></i> Export as PDF
+                        </button>
+                        <button class="btn btn-outline-success btn-custom" onclick="exportPNG()">
+                            <i class="fas fa-image"></i> Export as Images
+                        </button>
+                        <button class="btn btn-outline-info btn-custom" onclick="exportData()">
+                            <i class="fas fa-file-csv"></i> Export Raw Data
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Load visualization data
+$(document).ready(function() {
+    $.ajax({
+        url: '/get_visualization_data',
+        method: 'GET',
+        success: function(data) {
+            createCharts(data);
+        }
+    });
+});
+
+function createCharts(data) {
+    // Fraud by Hour Chart
+    const fraudByHourCtx = document.getElementById('fraudByHourChart').getContext('2d');
+    new Chart(fraudByHourCtx, {
+        type: 'line',
+        data: {
+            labels: Array.from({length: 24}, (_, i) => i + ':00'),
+            datasets: [{
+                label: 'Fraud Count',
+                data: [5, 3, 2, 1, 2, 3, 5, 8, 12, 18, 22, 20, 19, 21, 17, 15, 14, 16, 18, 15, 12, 10, 8, 6],
+                borderColor: 'rgba(220, 53, 69, 1)',
+                backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            }
+        }
+    });
+
+    // Fraud by Type Chart
+    const fraudByTypeCtx = document.getElementById('fraudByTypeChart').getContext('2d');
+    new Chart(fraudByTypeCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Online', 'Swipe', 'Chip'],
+            datasets: [{
+                data: [183, 87, 45],
+                backgroundColor: [
+                    'rgba(220, 53, 69, 0.8)',
+                    'rgba(255, 193, 7, 0.8)',
+                    'rgba(40, 167, 69, 0.8)'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom' }
+            }
+        }
+    });
+
+    // MCC Fraud Chart
+    const mccCtx = document.getElementById('mccFraudChart').getContext('2d');
+    new Chart(mccCtx, {
+        type: 'bar',
+        data: {
+            labels: ['5732-Electronics', '5999-Misc', '5812-Restaurants', '5411-Grocery', '5912-Drug', '5722-Appliances'],
+            datasets: [{
+                label: 'Fraud Rate (%)',
+                data: [9.5, 4.2, 3.1, 0.8, 0.6, 0.4],
+                backgroundColor: 'rgba(255, 193, 7, 0.8)'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return value + '%';
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Amount Distribution
+    const amountCtx = document.getElementById('amountDistributionChart').getContext('2d');
+    new Chart(amountCtx, {
+        type: 'bar',
+        data: {
+            labels: ['$0-50', '$50-100', '$100-200', '$200-500', '$500+'],
+            datasets: [
+                {
+                    label: 'Legitimate',
+                    data: [85000, 72000, 35000, 15000, 3000],
+                    backgroundColor: 'rgba(40, 167, 69, 0.6)'
+                },
+                {
+                    label: 'Fraudulent',
+                    data: [45, 68, 112, 67, 23],
+                    backgroundColor: 'rgba(220, 53, 69, 0.8)'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    type: 'logarithmic'
+                }
+            }
+        }
+    });
+
+    // Fraud Heatmap (simplified)
+    const heatmapCtx = document.getElementById('fraudHeatmap').getContext('2d');
+    new Chart(heatmapCtx, {
+        type: 'bubble',
+        data: {
+            datasets: [{
+                label: 'Fraud Intensity',
+                data: [
+                    {x: 1, y: 10, r: 15},
+                    {x: 2, y: 11, r: 20},
+                    {x: 3, y: 12, r: 25},
+                    {x: 4, y: 13, r: 22},
+                    {x: 5, y: 14, r: 18},
+                    {x: 6, y: 20, r: 12},
+                    {x: 7, y: 22, r: 10}
+                ],
+                backgroundColor: 'rgba(255, 99, 132, 0.6)'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    title: { display: true, text: 'Day of Week' }
+                },
+                y: {
+                    title: { display: true, text: 'Hour of Day' }
+                }
+            }
+        }
+    });
+
+    // Time Series
+    const timeSeriesCtx = document.getElementById('fraudTimeSeries').getContext('2d');
+    new Chart(timeSeriesCtx, {
+        type: 'line',
+        data: {
+            labels: ['Jan 2016', 'Jul 2016', 'Jan 2017', 'Jul 2017', 'Jan 2018', 'Jul 2018'],
+            datasets: [{
+                label: 'Fraud Rate',
+                data: [0.12, 0.14, 0.15, 0.13, 0.16, 0.15],
+                borderColor: 'rgba(102, 126, 234, 1)',
+                backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    ticks: {
+                        callback: function(value) {
+                            return value + '%';
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // ROC Curve
+    const rocCtx = document.getElementById('rocCurve').getContext('2d');
+    new Chart(rocCtx, {
+        type: 'line',
+        data: {
+            labels: [0, 0.2, 0.4, 0.6, 0.8, 1],
+            datasets: [{
+                label: 'ROC Curve',
+                data: [0, 0.35, 0.68, 0.85, 0.92, 1],
+                borderColor: 'rgba(15, 98, 254, 1)',
+                backgroundColor: 'rgba(15, 98, 254, 0.1)',
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: { title: { display: true, text: 'FPR' }},
+                y: { title: { display: true, text: 'TPR' }}
+            }
+        }
+    });
+
+    // Confusion Matrix (simplified)
+    const confusionCtx = document.getElementById('confusionMatrix').getContext('2d');
+    new Chart(confusionCtx, {
+        type: 'bar',
+        data: {
+            labels: ['TN', 'FP', 'FN', 'TP'],
+            datasets: [{
+                data: [41920, 10, 52, 28],
+                backgroundColor: ['#28a745', '#ffc107', '#ffc107', '#28a745']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false }}
+        }
+    });
+
+    // Feature Importance
+    const featureCtx = document.getElementById('featureImportance').getContext('2d');
+    new Chart(featureCtx, {
+        type: 'horizontalBar',
+        data: {
+            labels: ['merchant_fraud_rate', 'mcc_fraud_rate', 'amount_zscore', 'is_online', 'hour_fraud_rate'],
+            datasets: [{
+                data: [0.418, 0.166, 0.142, 0.135, 0.098],
+                backgroundColor: 'rgba(40, 167, 69, 0.6)'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false }},
+            scales: {
+                x: { beginAtZero: true, max: 0.5 }
+            }
+        }
+    });
+}
+
+// Export functions
+function exportPDF() {
+    showNotification('Generating PDF report...', 'info');
+}
+
+function exportPNG() {
+    showNotification('Exporting charts as images...', 'info');
+}
+
+function exportData() {
+    showNotification('Exporting visualization data...', 'info');
+}
+</script>
+{% endblock %}
