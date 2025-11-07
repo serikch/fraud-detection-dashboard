@@ -1,0 +1,49 @@
+# Core Web Framework
+Flask==2.3.3
+Werkzeug==2.3.7
+
+# Data Processing
+pandas==2.0.3
+numpy==1.24.3
+openpyxl==3.1.2  # For Excel file support
+xlrd==2.0.1  # For reading Excel files
+
+# Machine Learning
+scikit-learn==1.3.0
+imbalanced-learn==0.11.0  # For handling imbalanced datasets
+xgboost==1.7.6  # Optional: if you want XGBoost support
+lightgbm==4.0.0  # Optional: if you want LightGBM support
+
+# Visualization
+matplotlib==3.7.2
+seaborn==0.12.2
+plotly==5.16.1  # For interactive visualizations
+
+# IBM Watson X (Optional - uncomment if you have IBM credentials)
+# ibm-watson-machine-learning==1.0.327
+# ibm-cloud-sdk-core==3.16.7
+# ibm-watson==7.0.1
+
+# Utilities
+python-dateutil==2.8.2
+pytz==2023.3
+joblib==1.3.2  # For model serialization
+scipy==1.11.2  # For statistical operations
+
+# File handling
+python-multipart==0.0.6  # For file uploads
+
+# Security
+python-dotenv==1.0.0  # For environment variables
+cryptography==41.0.3  # For secure operations
+
+# Development tools (optional)
+ipython==8.14.0  # For debugging
+jupyter==1.0.0  # If you want to run notebooks
+
+# Testing (optional)
+pytest==7.4.0
+pytest-flask==1.2.0
+
+# Production server (optional - for deployment)
+gunicorn==21.2.0
